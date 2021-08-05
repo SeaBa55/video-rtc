@@ -1,7 +1,7 @@
 import './style.css'
 
 import firebase from 'firebase/app';
-import 'firebase/filestore';
+import 'firebase/firestore';
 
 // Your web app's Firebase configuration
 // For Firebase JS SDK v7.20.0 and later, measurementId is optional
@@ -26,7 +26,7 @@ const firestore = firebase.firestore();
 const servers = {
   iceServers: [
     {
-      urls: ['stun1.1.google.com:190302', 'stun:stun2.1.google.com:19302']
+      urls: ['stun:stun1.l.google.com:19302', 'stun:stun2.l.google.com:19302'],
     },
   ],
   iceCandidatePoolSize: 10,
@@ -66,9 +66,9 @@ webcamButton.onclick = async () => {
   webcamVideo.srcObject = localStream;
   remoteVideo.srcObject = remoteStream;
 
-  // callButton.disabled = false;
-  // answerButton.disabled = false;
-  // webcamButton.disabled = true;
+  callButton.disabled = false;
+  answerButton.disabled = false;
+  webcamButton.disabled = true;
 };
 
 // 2. Create an offer
@@ -81,7 +81,7 @@ callButton.onclick = async () => {
   callInput.value = callDoc.id;
 
   // Get candidates for caller, save to db
-  pc.onicecandidate = event => {
+  pc.onicecandidate = (event) => {
     event.candidate && offerCandidates.add(event.candidate.toJSON());
   };
 
@@ -100,9 +100,9 @@ callButton.onclick = async () => {
   // Listen for remote answer and when answer is recieved update peer connection - firebnase implementation
   callDoc.onSnapshot((snapshot) => {
     const data = snapshot.data();
-    if (!pc.currentRemoteDescription && data?.anser) {
-      const anwserDescription = new RTCSessionDescription(data.anser);
-      pc.setRemoteDescription(anwserDescription);
+    if (!pc.currentRemoteDescription && data?.answer) {
+      const answerDescription = new RTCSessionDescription(data.answer);
+      pc.setRemoteDescription(answerDescription);
     }
   });
 

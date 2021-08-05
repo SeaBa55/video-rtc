@@ -3,8 +3,6 @@ import './style.css';
 import firebase from 'firebase/app';
 import 'firebase/firestore';
 
-
-
 const firebaseConfig = {
     apiKey: "AIzaSyAtgoeugUvh6E4e5bOF7vNTXy4QCHKB0as",
     authDomain: "server-61cc8.firebaseapp.com",
@@ -89,7 +87,7 @@ callButton.onclick = async () => {
   const offerDescription = await pc.createOffer();
   await pc.setLocalDescription(offerDescription);
 
-  
+
   const offer = {
     sdp: offerDescription.sdp,
     type: offerDescription.type,
