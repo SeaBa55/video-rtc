@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>webRTC-firebase</title>
+  </head>
+  <body>
+
+    <h2>Start your Webcam</h2>
+
+    <div class="videos">
+      <span>
+        <h3>Local</h3>
+        <video id="webcamVideo" autoplay playsisline></video>
+      </span>
+      <span>
+        <h3>Remote</h3>
+        <video id="remoteVideo" autoplay playsisline></video>
+      </span>
+    </div>
+
+    <button id="webcamButton">start webcam</button>
+    <h2>Create a new Call</h2>
+    <button id="callButton" disabled>call</button>
+
+    <h2>join a call</h2>
+
+    <input id="callInput" />
+    <button id="answerButton" disabled>answer</button>
+    
+    <button id="hangupButton">hangup</button>
+
+    <script type="module" src="/main.js"></script>
+  </body>
+</html>
