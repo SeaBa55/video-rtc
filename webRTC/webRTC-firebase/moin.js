@@ -1,38 +1,38 @@
-import './style.css'
+import './style.css';
 
 import firebase from 'firebase/app';
-import 'firebase/filestore';
+import 'firebase/firestore';
 
-// Your web app's Firebase configuration
-// For Firebase JS SDK v7.20.0 and later, measurementId is optional
-var firebaseConfig = {
-  apiKey: "AIzaSyAtgoeugUvh6E4e5bOF7vNTXy4QCHKB0as",
-  authDomain: "server-61cc8.firebaseapp.com",
-  projectId: "server-61cc8",
-  storageBucket: "server-61cc8.appspot.com",
-  messagingSenderId: "714072976475",
-  appId: "1:714072976475:web:746b81d42249ca114fa37e",
-  measurementId: "G-93B7FHEXWM"
+
+
+const firebaseConfig = {
+    apiKey: "AIzaSyAtgoeugUvh6E4e5bOF7vNTXy4QCHKB0as",
+    authDomain: "server-61cc8.firebaseapp.com",
+    projectId: "server-61cc8",
+    storageBucket: "server-61cc8.appspot.com",
+    messagingSenderId: "714072976475",
+    appId: "1:714072976475:web:746b81d42249ca114fa37e",
+    measurementId: "G-93B7FHEXWM"
 };
-// Initialize Firebase
 
-if (firebase.app.length) {
+
+if (!firebase.apps.length) {
   firebase.initializeApp(firebaseConfig);
 }
 
 const firestore = firebase.firestore();
 
-// Using specific STUN servers
+
 const servers = {
   iceServers: [
     {
-      urls: ['stun1.1.google.com:190302', 'stun:stun2.1.google.com:19302']
+      urls: ['stun:stun1.l.google.com:19302', 'stun:stun2.l.google.com:19302'],
     },
   ],
   iceCandidatePoolSize: 10,
 };
 
-// Global state
+// Global State
 const pc = new RTCPeerConnection(servers);
 let localStream = null;
 let remoteStream = null;
@@ -48,7 +48,7 @@ const hangupButton = document.getElementById('hangupButton');
 
 // 1. Setup media sources
 webcamButton.onclick = async () => {
-  localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true});
+  localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
   remoteStream = new MediaStream();
 
   // Push tracks from local stream to peer connection
@@ -56,9 +56,9 @@ webcamButton.onclick = async () => {
     pc.addTrack(track, localStream);
   });
 
-  // Pull tracks form remote stream, add video stream
-  pc.ontrack = event => {
-    event.streams[0].getTracks().forEach(track => {
+  // Pull tracks from remote stream, add to video stream
+  pc.ontrack = (event) => {
+    event.streams[0].getTracks().forEach((track) => {
       remoteStream.addTrack(track);
     });
   };
@@ -66,14 +66,14 @@ webcamButton.onclick = async () => {
   webcamVideo.srcObject = localStream;
   remoteVideo.srcObject = remoteStream;
 
-  // callButton.disabled = false;
-  // answerButton.disabled = false;
-  // webcamButton.disabled = true;
+  callButton.disabled = false;
+  answerButton.disabled = false;
+  webcamButton.disabled = true;
 };
 
 // 2. Create an offer
 callButton.onclick = async () => {
-  // Reference firestore collection
+  // Reference Firestore collections for signaling
   const callDoc = firestore.collection('calls').doc();
   const offerCandidates = callDoc.collection('offerCandidates');
   const answerCandidates = callDoc.collection('answerCandidates');
@@ -81,7 +81,7 @@ callButton.onclick = async () => {
   callInput.value = callDoc.id;
 
   // Get candidates for caller, save to db
-  pc.onicecandidate = event => {
+  pc.onicecandidate = (event) => {
     event.candidate && offerCandidates.add(event.candidate.toJSON());
   };
 
@@ -89,7 +89,7 @@ callButton.onclick = async () => {
   const offerDescription = await pc.createOffer();
   await pc.setLocalDescription(offerDescription);
 
-  // session description protcol 
+  
   const offer = {
     sdp: offerDescription.sdp,
     type: offerDescription.type,
@@ -97,22 +97,22 @@ callButton.onclick = async () => {
 
   await callDoc.set({ offer });
 
-  // Listen for remote answer and when answer is recieved update peer connection - firebnase implementation
+  // Listen for remote answer
   callDoc.onSnapshot((snapshot) => {
     const data = snapshot.data();
-    if (!pc.currentRemoteDescription && data?.anser) {
-      const anwserDescription = new RTCSessionDescription(data.anser);
-      pc.setRemoteDescription(anwserDescription);
+    if (!pc.currentRemoteDescription && data?.answer) {
+      const answerDescription = new RTCSessionDescription(data.answer);
+      pc.setRemoteDescription(answerDescription);
     }
   });
 
-  // When answered, add candidate to peer connection - firebnase implementation
-  answerCandidates.onSnapshot(snapshot => {
+  // When answered, add candidate to peer connection
+  answerCandidates.onSnapshot((snapshot) => {
     snapshot.docChanges().forEach((change) => {
       if (change.type === 'added') {
         const candidate = new RTCIceCandidate(change.doc.data());
         pc.addIceCandidate(candidate);
-      };
+      }
     });
   });
 
@@ -126,8 +126,8 @@ answerButton.onclick = async () => {
   const answerCandidates = callDoc.collection('answerCandidates');
   const offerCandidates = callDoc.collection('offerCandidates');
 
-  // Listen to icecandidate event on the pc to update the answer candidates collection whenver a new candidate is created 
-  pc.onicecandidate = event => {
+
+  pc.onicecandidate = (event) => {
     event.candidate && answerCandidates.add(event.candidate.toJSON());
   };
 
@@ -144,11 +144,11 @@ answerButton.onclick = async () => {
     sdp: answerDescription.sdp,
   };
 
-  await callDoc.update({ answer })
+  await callDoc.update({ answer });
 
   offerCandidates.onSnapshot((snapshot) => {
     snapshot.docChanges().forEach((change) => {
-      console.log(change)
+      console.log(change);
       if (change.type === 'added') {
         let data = change.doc.data();
         pc.addIceCandidate(new RTCIceCandidate(data));
